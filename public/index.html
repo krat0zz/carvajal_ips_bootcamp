@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPS Carvajal - Copiloto de Atención con IA & Agendamiento</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked para Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Iconos Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Anti-flicker Theme Script -->
+  <script>
+    if (localStorage.getItem('ips_carvajal_theme') === 'dark' || (!localStorage.getItem('ips_carvajal_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+  <style>
+    .prose p { margin-bottom: 0.5rem; }
+    .prose ul { list-style-type: disc; margin-left: 1.25rem; margin-bottom: 0.5rem; }
+    .prose ol { list-style-type: decimal; margin-left: 1.25rem; margin-bottom: 0.5rem; }
+    .prose h3 { font-weight: 700; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+    .prose code { background-color: #f1f5f9; padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-size: 0.875rem; }
+
+    /* ========================================================================= */
+    /* PALETA OFICIAL IPS CARVAJAL                                               */
+    /* Fondo Oscuro: #171932 (rgb 23, 25, 50 / hsl 236, 37%, 14%)               */
+    /* Botones Claro y Oscuro: #0aa7c6 (rgb 10, 167, 198 / hsl 190, 90%, 41%)   */
+    /* ========================================================================= */
+    :root {
+      --ips-teal: #0aa7c6;
+      --ips-teal-hover: #088ea8;
+      --ips-teal-active: #06768c;
+      --ips-dark-bg: #171932;
+    }
+
+    /* Botones oficiales de IPS Carvajal (#0aa7c6) para modo claro y oscuro */
+    #chat-submit,
+    #btn-cargar-360,
+    #btn-agendar-web,
+    #btn-validar-eps,
+    .btn-carvajal {
+      background-color: #0aa7c6 !important;
+      color: #ffffff !important;
+      border-color: #0aa7c6 !important;
+    }
+    #chat-submit:hover,
+    #btn-cargar-360:hover,
+    #btn-agendar-web:hover:not(:disabled),
+    #btn-validar-eps:hover,
+    .btn-carvajal:hover {
+      background-color: #088ea8 !important;
+      border-color: #088ea8 !important;
+    }
+    #btn-agendar-web:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed;
+    }
+
+    /* ========================================================================= */
+    /* MODO OSCURO DE ALTO CONTRASTE (#171932)                                   */
+    /* ========================================================================= */
+    html.dark {
+      color-scheme: dark;
+    }
+    html.dark body {
+      background-color: #171932 !important;
+      color: #f1f3fd !important;
+    }
+    html.dark header {
+      background-color: #1c1f3d !important;
+      border-color: #2e3364 !important;
+    }
+    html.dark header h1 {
+      color: #ffffff !important;
+    }
+    html.dark nav {
+      background-color: #23274e !important;
+      border-color: #343a70 !important;
+    }
+    html.dark nav button {
+      color: #c5caf0 !important;
+    }
+    html.dark nav button:hover {
+      color: #ffffff !important;
+      background-color: #2f3467 !important;
+    }
+    html.dark nav button.bg-white {
+      background-color: #0aa7c6 !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 6px rgba(10, 167, 198, 0.4) !important;
+    }
+    html.dark .bg-white {
+      background-color: #1f2347 !important;
+      border-color: #2f3468 !important;
+      color: #f1f3fd !important;
+    }
+    html.dark .bg-slate-50 {
+      background-color: #171932 !important;
+    }
+    html.dark .bg-slate-100 {
+      background-color: #252a54 !important;
+      color: #f1f3fd !important;
+      border-color: #343a70 !important;
+    }
+    html.dark .bg-slate-800 {
+      background-color: #252a54 !important;
+      border-color: #3d437e !important;
+    }
+    html.dark .border-slate-200,
+    html.dark .border-slate-100 {
+      border-color: #2f3468 !important;
+    }
+    html.dark .border-slate-300 {
+      border-color: #3d437e !important;
+    }
+    html.dark .text-slate-900 {
+      color: #ffffff !important;
+    }
+    html.dark .text-slate-800 {
+      color: #f1f3fd !important;
+    }
+    html.dark .text-slate-700 {
+      color: #dbe0fa !important;
+    }
+    html.dark .text-slate-600 {
+      color: #c5caf0 !important;
+    }
+    html.dark .text-slate-500 {
+      color: #9da4d6 !important;
+    }
+    html.dark .text-slate-400 {
+      color: #9da4d6 !important;
+    }
+    html.dark input, 
+    html.dark select, 
+    html.dark textarea {
+      background-color: #242850 !important;
+      color: #ffffff !important;
+      border-color: #3d437e !important;
+    }
+    html.dark input:focus, 
+    html.dark select:focus, 
+    html.dark textarea:focus {
+      border-color: #0aa7c6 !important;
+      box-shadow: 0 0 0 2px rgba(10, 167, 198, 0.25) !important;
+      outline: none !important;
+    }
+    html.dark input::placeholder, 
+    html.dark textarea::placeholder {
+      color: #8c93c4 !important;
+    }
+    html.dark .prose {
+      color: #f1f3fd !important;
+    }
+    html.dark .prose p, 
+    html.dark .prose li {
+      color: #f1f3fd !important;
+    }
+    html.dark .prose strong {
+      color: #ffffff !important;
+    }
+    html.dark .prose code {
+      background-color: #171932 !important;
+      color: #38d6f5 !important;
+      border: 1px solid #33386e !important;
+    }
+    html.dark .prose blockquote {
+      border-left-color: #0aa7c6 !important;
+      background-color: #252a54 !important;
+      color: #f1f3fd !important;
+    }
+    /* Badges y contenedores temáticos con contraste */
+    html.dark .bg-blue-50 {
+      background-color: #0aa7c626 !important;
+      color: #38d6f5 !important;
+      border-color: #0aa7c6 !important;
+    }
+    html.dark .bg-emerald-50 {
+      background-color: #064e3b33 !important;
+      color: #6ee7b7 !important;
+      border-color: #059669 !important;
+    }
+    html.dark .bg-amber-50 {
+      background-color: #78350f33 !important;
+      color: #fde68a !important;
+      border-color: #d97706 !important;
+    }
+    html.dark .bg-purple-50 {
+      background-color: #581c8733 !important;
+      color: #e9d5ff !important;
+      border-color: #9333ea !important;
+    }
+    html.dark .text-blue-900 { color: #8deaf9 !important; }
+    html.dark .text-blue-700 { color: #38d6f5 !important; }
+    html.dark .text-emerald-950, html.dark .text-emerald-900 { color: #a7f3d0 !important; }
+    html.dark .text-emerald-800, html.dark .text-emerald-700 { color: #6ee7b7 !important; }
+    html.dark .text-amber-950, html.dark .text-amber-900 { color: #fde68a !important; }
+    html.dark .text-amber-800, html.dark .text-amber-700 { color: #fcd34d !important; }
+    html.dark .text-rose-800, html.dark .text-rose-700 { color: #fca5a5 !important; }
+    html.dark .bg-blue-100 { background-color: #0aa7c633 !important; color: #8deaf9 !important; }
+    html.dark .bg-emerald-100 { background-color: #064e3b66 !important; color: #a7f3d0 !important; }
+    html.dark .bg-amber-100 { background-color: #78350f66 !important; color: #fde68a !important; }
+    html.dark .bg-rose-100 { background-color: #88133766 !important; color: #fecdd3 !important; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col h-screen overflow-hidden">
+
+  <!-- BARRA DE NAVEGACIÓN SUPERIOR -->
+  <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0aa7c6] to-[#06768c] flex items-center justify-center text-white font-bold text-lg shadow-md">
+        C
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="font-bold text-lg text-slate-900 leading-tight">IPS Carvajal</h1>
+          <span class="text-xs bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded-full">Tunja, Boyacá</span>
+          <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Copiloto IA Activo
+          </span>
+        </div>
+        <p class="text-xs text-slate-500">Unificación inteligente: Athenea + iMedical + SAGICC + Base RAG</p>
+      </div>
+    </div>
+
+    <!-- Pestañas de Navegación -->
+    <nav class="flex space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-sm font-medium">
+      <button onclick="cambiarPestana('copiloto')" id="tab-copiloto" class="px-4 py-2 rounded-lg bg-white text-[#0aa7c6] font-semibold shadow-sm flex items-center gap-2 transition">
+        <i data-lucide="message-square" class="w-4 h-4"></i> Copiloto Call Center
+      </button>
+      <button onclick="cambiarPestana('agendamiento')" id="tab-agendamiento" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-2 transition">
+        <i data-lucide="calendar-plus" class="w-4 h-4"></i> Agendamiento Web (Autonomía)
+      </button>
+      <!-- Pestaña oculta para la sustentación (código y vista preservados) -->
+      <button onclick="cambiarPestana('metricas')" id="tab-metricas" class="hidden px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-2 transition" style="display: none !important;">
+        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> KPIs & Tiempos (-25%)
+      </button>
+    </nav>
+
+    <!-- Enlaces directos a Swagger Mocks y Modo Oscuro -->
+    <div class="flex items-center space-x-2">
+      <!-- Botón de Modo Oscuro / Claro -->
+      <button id="theme-toggle" onclick="toggleTheme()" title="Alternar entre modo oscuro y modo claro"
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition">
+        <i data-lucide="moon" class="w-3.5 h-3.5" id="theme-icon"></i>
+        <span id="theme-text">Modo Oscuro</span>
+      </button>
+
+      <a href="/mock/docs" target="_blank" class="text-xs text-slate-600 hover:text-[#0aa7c6] bg-slate-100 hover:bg-blue-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1.5 transition">
+        <i data-lucide="code" class="w-3.5 h-3.5"></i> Swagger Mocks APIs
+      </a>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 flex overflow-hidden">
+
+    <!-- ========================================================================= -->
+    <!-- VISTA 1: COPILOTO DE ATENCIÓN (CHAT + FICHA UNIFICADA 360)               -->
+    <!-- ========================================================================= -->
+    <section id="vista-copiloto" class="flex-1 flex overflow-hidden">
+      
+      <!-- Columna Izquierda: Chat Conversacional -->
+      <div class="w-7/12 flex flex-col border-r border-slate-200 bg-white">
+        
+        <!-- Área de Mensajes del Chat -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+          <!-- Mensaje inicial de bienvenida -->
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#0aa7c6] text-white flex items-center justify-center shrink-0 shadow-sm">
+              <i data-lucide="bot" class="w-5 h-5"></i>
+            </div>
+            <div class="bg-slate-100 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-800 max-w-xl">
+              <p class="font-semibold text-slate-900 mb-1">¡Hola! Soy el Copiloto Inteligente de IPS Carvajal.</p>
+              <p class="text-slate-600 mb-2">Estoy conectado en tiempo real a los 3 sistemas para que no tengas que saltar entre ventanas:</p>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                  <span class="font-semibold text-blue-700">Athenea</span>
+                  <p class="text-slate-500">Afiliación EPS, cuotas, laboratorio y resultados.</p>
+                </div>
+                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                  <span class="font-semibold text-emerald-700">iMedical</span>
+                  <p class="text-slate-500">Agendas médicas, citas y resumen clínico.</p>
+                </div>
+                <div class="bg-white p-2 rounded-lg border border-slate-200">
+                  <span class="font-semibold text-amber-700">SAGICC</span>
+                  <p class="text-slate-500">Llamadas, WhatsApp, esperas y PQRS.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Entrada de Mensaje -->
+        <div class="p-3 bg-white border-t border-slate-200">
+          <form id="chat-form" onsubmit="enviarMensaje(event)" class="flex gap-2">
+            <input type="text" id="chat-input" placeholder="Pregunta sobre un paciente por cédula, disponibilidad de cita, laboratorios o PQRS..." 
+                   class="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0aa7c6] bg-slate-50 focus:bg-white transition" />
+            <button type="submit" id="chat-submit" class="bg-[#0aa7c6] hover:bg-[#088ea8] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition shadow-sm">
+              <span>Consultar</span>
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: FICHA 360 UNIFICADA DEL PACIENTE -->
+      <div class="w-5/12 flex flex-col bg-slate-50 overflow-hidden">
+        <div class="p-4 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
+          <div>
+            <h2 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="user-check" class="w-4 h-4 text-[#0aa7c6]"></i> Ficha Unificada 360° del Paciente
+            </h2>
+            <p class="text-xs text-slate-500">Consolida en un clic los datos de Athenea, iMedical y SAGICC</p>
+          </div>
+          <div class="flex items-center gap-1">
+            <input type="text" id="doc-360-input" placeholder="Cédula..." class="w-28 text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#0aa7c6]" />
+            <button id="btn-cargar-360" onclick="cargarFicha360(document.getElementById('doc-360-input').value)" class="text-xs bg-[#0aa7c6] hover:bg-[#088ea8] text-white px-3 py-1.5 rounded-lg font-semibold transition shadow-sm">
+              Cargar
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenedor con scroll para la Ficha 360 -->
+        <div id="ficha-360-content" class="flex-1 overflow-y-auto p-4 space-y-4">
+          <div class="text-center py-12 text-slate-400">
+            <i data-lucide="id-card" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+            <p class="text-sm font-medium">Ningún paciente seleccionado</p>
+            <p class="text-xs">Ingresa un número de documento arriba para consultar su ficha unificada 360° en tiempo real.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VISTA 2: AUTOSERVICIO WEB DE AGENDAMIENTO (Para laboratoriocarvajal.com)  -->
+    <!-- ========================================================================= -->
+    <section id="vista-agendamiento" class="flex-1 flex justify-center overflow-y-auto p-6 hidden">
+      <div class="max-w-3xl w-full bg-white rounded-2xl border border-slate-200 p-8 shadow-sm h-fit">
+        
+        <div class="flex items-start justify-between border-b border-slate-200 pb-5 mb-6">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+              Solución para la Web Carvajal
+            </span>
+            <h2 class="text-2xl font-bold text-slate-900 mt-2">Agendamiento de Citas en Línea</h2>
+            <p class="text-sm text-slate-500">Resuelve el dolor de la página web que no agenda y habilita el 50% de autonomía.</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block">Conexión directa</span>
+            <span class="text-xs font-semibold text-blue-600">iMedical + Athenea API</span>
+          </div>
+        </div>
+
+        <form onsubmit="realizarReservaWeb(event)" class="space-y-6">
+          
+          <!-- Paso 1: Documento -->
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-700 mb-1.5">1. Identificación del Paciente</label>
+            <div class="flex gap-2">
+              <input type="text" id="web-doc" required placeholder="Número de cédula o TI..." 
+                     class="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#0aa7c6]" />
+              <button type="button" id="btn-validar-eps" onclick="validarPacienteWeb()" class="bg-[#0aa7c6] hover:bg-[#088ea8] text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow-sm">
+                Validar EPS
+              </button>
+            </div>
+            <div id="web-paciente-info" class="mt-2 text-xs hidden"></div>
+          </div>
+
+          <!-- Paso 2: Especialidad y Sede -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-700 mb-1.5">2. Especialidad Médica</label>
+              <select id="web-esp" onchange="buscarCuposWeb()" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-[#0aa7c6]">
+                <option value="">Seleccione una especialidad...</option>
+                <option value="Medicina General">Medicina General</option>
+                <option value="Medicina Interna">Medicina Interna</option>
+                <option value="Pediatria">Pediatría</option>
+                <option value="Ginecologia y Obstetricia">Ginecología y Obstetricia</option>
+                <option value="Cardiologia">Cardiología</option>
+                <option value="Ortopedia y Traumatologia">Ortopedia</option>
+                <option value="Dermatologia">Dermatología</option>
+                <option value="Toma de Muestras de Laboratorio">Toma de Muestras de Laboratorio</option>
+                <option value="Salud Ocupacional">Salud Ocupacional (Examen de Ingreso)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-700 mb-1.5">Sede</label>
+              <select id="web-sede" onchange="buscarCuposWeb()" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-[#0aa7c6]">
+                <option value="">Todas las sedes (Tunja / Duitama)</option>
+                <option value="Sede Centro Tunja">Sede Centro Tunja</option>
+                <option value="Sede Norte Tunja">Sede Norte Tunja</option>
+                <option value="Sede Duitama">Sede Duitama</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Paso 3: Selección de Horario Disponible -->
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-700 mb-1.5">3. Cupos Disponibles en Tiempo Real (iMedical API)</label>
+            <div id="web-slots-container" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto p-1 bg-slate-50 border border-slate-200 rounded-xl">
+              <div class="col-span-full py-6 text-center text-xs text-slate-400">
+                Selecciona una especialidad para ver los cupos libres.
+              </div>
+            </div>
+          </div>
+
+          <!-- Checkbox de atención particular si no tiene EPS -->
+          <div class="flex items-center space-x-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <input type="checkbox" id="web-particular" class="rounded text-[#0aa7c6] focus:ring-[#0aa7c6]" />
+            <label for="web-particular">Agendar como <strong>Atención Particular</strong> (pago en caja sin cargo a EPS).</label>
+          </div>
+
+          <!-- Botón de Envío -->
+          <button type="submit" id="btn-agendar-web" disabled class="w-full bg-[#0aa7c6] hover:bg-[#088ea8] disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span>Confirmar Agendamiento de Cita</span>
+          </button>
+        </form>
+
+        <div id="web-reserva-resultado" class="mt-6 hidden"></div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VISTA 3: DASHBOARD DE KPIS Y TIEMPOS (-25% y 50% Autonomía)              -->
+    <!-- ========================================================================= -->
+    <section id="vista-metricas" class="flex-1 overflow-y-auto p-8 hidden">
+      <div class="max-w-5xl mx-auto space-y-6">
+        
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">
+            Medición de Impacto
+          </span>
+          <h2 class="text-2xl font-bold text-slate-900 mt-2">Cumplimiento de Metas: Autonomía y Tiempos</h2>
+          <p class="text-sm text-slate-500">Indicadores generados a partir de los datos de SAGICC e impacto proyectado de la solución.</p>
+        </div>
+
+        <!-- Tarjetas de KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">AHT (Tiempo de Atención)</div>
+            <div class="text-3xl font-extrabold text-slate-900 mt-1" id="kpi-aht">--</div>
+            <div class="text-xs text-emerald-600 font-semibold mt-2 flex items-center gap-1">
+              <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i> Meta: -25% (Ahorro ~2 min)
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">% Tiempo Consultando Sistemas</div>
+            <div class="text-3xl font-extrabold text-amber-600 mt-1" id="kpi-swivel">--</div>
+            <div class="text-xs text-slate-500 mt-2">Dolor actual del operador</div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">Tiempo de Espera Promedio</div>
+            <div class="text-3xl font-extrabold text-blue-600 mt-1" id="kpi-espera">--</div>
+            <div class="text-xs text-slate-500 mt-2">WhatsApp / Voz</div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500 font-medium">Meta de Autonomía</div>
+            <div class="text-3xl font-extrabold text-purple-600 mt-1">50%</div>
+            <div class="text-xs text-purple-700 font-semibold mt-2">Web + WhatsApp Bots</div>
+          </div>
+        </div>
+
+        <!-- Comparativa Antes vs Después -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-900 mb-4 text-base">¿Cómo se logra la meta del 25% y 50%?</h3>
+          <div class="grid grid-cols-2 gap-6 text-sm">
+            <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl">
+              <span class="font-bold text-rose-800 text-xs uppercase block mb-2">Operación Tradicional (Dolor)</span>
+              <ul class="space-y-2 text-rose-950 text-xs">
+                <li>❌ El colaborador abre <strong>Athenea</strong>, digita la cédula y valida afiliación y laboratorio.</li>
+                <li>❌ Minimiza y abre <strong>iMedical</strong>, busca médico, fecha y cupos libres.</li>
+                <li>❌ Vuelve a <strong>SAGICC</strong> para registrar la llamada y tipificar.</li>
+                <li>❌ <strong>Resultado:</strong> 7 a 9 minutos por llamada; 45% del tiempo en búsquedas manuales.</li>
+              </ul>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+              <span class="font-bold text-emerald-800 text-xs uppercase block mb-2">Con el Copiloto de IA & Autoservicio</span>
+              <ul class="space-y-2 text-emerald-950 text-xs">
+                <li>✅ <strong>Una sola pantalla:</strong> La consulta automática une Athenea, iMedical y SAGICC en &lt; 2 segundos.</li>
+                <li>✅ <strong>Ficha 360:</strong> Muestra vigencia de EPS, orden de laboratorio y citas pendientes en paralelo.</li>
+                <li>✅ <strong>Autoservicio Web:</strong> El paciente se agenda solo en la web, liberando el 50% de llamadas repetitivas.</li>
+                <li>✅ <strong>Resultado:</strong> Reducción superior al 25% en tiempo de llamada y disminución radical de PQRS.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT DEL CLIENTE -->
+  <script>
+    let historialChat = [];
+    let slotSeleccionado = null;
+
+    // Control de Tema Claro / Oscuro con Alto Contraste
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      aplicarTema(!isDark);
+      localStorage.setItem('ips_carvajal_theme', !isDark ? 'dark' : 'light');
+    }
+
+    function aplicarTema(dark) {
+      const html = document.documentElement;
+      const icon = document.getElementById('theme-icon');
+      const text = document.getElementById('theme-text');
+      const btn = document.getElementById('theme-toggle');
+
+      if (dark) {
+        html.classList.add('dark');
+        if (text) text.textContent = 'Modo Claro';
+        if (btn) {
+          btn.className = "text-xs font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-600";
+        }
+        if (icon) {
+          icon.setAttribute('data-lucide', 'sun');
+        }
+      } else {
+        html.classList.remove('dark');
+        if (text) text.textContent = 'Modo Oscuro';
+        if (btn) {
+          btn.className = "text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1.5 transition";
+        }
+        if (icon) {
+          icon.setAttribute('data-lucide', 'moon');
+        }
+      }
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    }
+
+    // Inicializar estado del tema e iconos
+    aplicarTema(document.documentElement.classList.contains('dark'));
+
+    // Cambiar de Pestaña
+    function cambiarPestana(pestana) {
+      document.getElementById('vista-copiloto').classList.add('hidden');
+      document.getElementById('vista-agendamiento').classList.add('hidden');
+      document.getElementById('vista-metricas').classList.add('hidden');
+
+      document.querySelectorAll('nav button').forEach(b => {
+        b.className = "px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-2 transition";
+      });
+
+      const btnActivo = document.getElementById(`tab-${pestana}`);
+      btnActivo.className = "px-4 py-2 rounded-lg bg-white text-blue-700 shadow-sm flex items-center gap-2 transition";
+
+      document.getElementById(`vista-${pestana}`).classList.remove('hidden');
+
+      if (pestana === 'metricas') {
+        cargarMetricasKPI();
+      }
+      lucide.createIcons();
+    }
+
+    // Enviar Prompt Rápido
+    function enviarPrompt(texto) {
+      document.getElementById('chat-input').value = texto;
+      document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+    }
+
+    // Enviar Mensaje al Copiloto
+    async function enviarMensaje(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const mensaje = input.value.trim();
+      if (!mensaje) return;
+
+      input.value = '';
+      const contenedor = document.getElementById('chat-messages');
+
+      // Agregar mensaje del usuario
+      contenedor.innerHTML += `
+        <div class="flex gap-3 justify-end">
+          <div class="bg-blue-600 text-white rounded-2xl rounded-tr-sm p-3.5 text-sm max-w-xl shadow-sm">
+            ${escapeHtml(mensaje)}
+          </div>
+        </div>
+      `;
+      contenedor.scrollTop = contenedor.scrollHeight;
+
+      // Placeholder de "Pensando..."
+      const idTemp = 'temp-' + Date.now();
+      contenedor.innerHTML += `
+        <div id="${idTemp}" class="flex gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+            <i data-lucide="bot" class="w-5 h-5"></i>
+          </div>
+          <div class="bg-slate-100 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-600 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+            <span>Consultando Athenea, iMedical y SAGICC...</span>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+      contenedor.scrollTop = contenedor.scrollHeight;
+
+      try {
+        const resp = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: mensaje, history: historialChat })
+        });
+        const data = await resp.json();
+
+        // Remover temporal
+        document.getElementById(idTemp).remove();
+
+        // Renderizar trazas de sistemas consultados
+        let trazasHtml = '';
+        if (data.trazas && data.trazas.length > 0) {
+          trazasHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
+          data.trazas.forEach(t => {
+            const color = t.sistema === 'Athenea' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                          t.sistema === 'iMedical' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                          t.sistema === 'SAGICC' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                          'bg-purple-50 text-purple-700 border-purple-200';
+            const ms = t.ms ? `${t.ms}ms` : '';
+            trazasHtml += `<span class="text-[10px] font-semibold px-2 py-0.5 rounded border ${color}">
+              ${t.sistema} · ${t.tool} ${ms}
+            </span>`;
+          });
+          trazasHtml += '</div>';
+        }
+
+        // Agregar respuesta del bot
+        const htmlResp = marked.parse(data.respuesta || '');
+        contenedor.innerHTML += `
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+              <i data-lucide="bot" class="w-5 h-5"></i>
+            </div>
+            <div class="bg-slate-100 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-800 max-w-xl">
+              ${trazasHtml}
+              <div class="prose text-sm text-slate-800">${htmlResp}</div>
+            </div>
+          </div>
+        `;
+        historialChat.push({ role: 'user', content: mensaje });
+        historialChat.push({ role: 'assistant', content: data.respuesta });
+
+        // Si se mencionó una cédula, cargar la ficha 360 automáticamente
+        const docMatch = mensaje.match(/\b\d{6,10}\b/);
+        if (docMatch) {
+          cargarFicha360(docMatch[0]);
+        }
+
+      } catch (err) {
+        document.getElementById(idTemp).remove();
+        contenedor.innerHTML += `
+          <div class="bg-red-50 text-red-700 p-3 rounded-xl text-xs">
+            Error al consultar el servicio: ${err.message}
+          </div>
+        `;
+      }
+      lucide.createIcons();
+      contenedor.scrollTop = contenedor.scrollHeight;
+    }
+
+    // Cargar Ficha Unificada 360
+    async function cargarFicha360(doc) {
+      if (!doc) return;
+      document.getElementById('doc-360-input').value = doc;
+      const c = document.getElementById('ficha-360-content');
+      c.innerHTML = `
+        <div class="text-center py-8 text-slate-400">
+          <span class="w-3 h-3 rounded-full bg-blue-600 animate-ping inline-block mr-2"></span>
+          <span class="text-xs">Unificando Athenea, iMedical y SAGICC...</span>
+        </div>
+      `;
+
+      try {
+        const resp = await fetch(`/api/patient-360/${doc}`);
+        if (!resp.ok) throw new Error('Paciente no registrado en la base de datos');
+        const d = await resp.json();
+        const p = d.athenea.paciente;
+        const afil = p.afiliacion || {};
+
+        let estadoColor = afil.estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+
+        let html = `
+          <!-- Cabecera Athenea -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Athenea · Paciente</span>
+                <h3 class="font-bold text-slate-900 text-base mt-1">${p.nombre_completo}</h3>
+                <p class="text-xs text-slate-500">${p.tipo_documento} ${p.numero_documento} · ${p.edad} años · ${p.municipio}</p>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${estadoColor}">${afil.estado}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 text-xs">
+              <div class="col-span-2 bg-blue-50/60 p-1.5 rounded-lg border border-blue-100">
+                <span class="text-slate-500 font-semibold">Empresa / Convenio:</span>
+                <strong class="text-blue-900 ml-1">${p.empresa || 'Particular / No registra'}</strong>
+              </div>
+              <div><span class="text-slate-400">EPS:</span> <strong class="text-slate-700">${afil.eps || 'Particular'}</strong></div>
+              <div><span class="text-slate-400">Régimen:</span> <strong class="text-slate-700">${afil.regimen} (Cat. ${afil.categoria || 'N/A'})</strong></div>
+              <div><span class="text-slate-400">Teléfono:</span> <strong class="text-slate-700">${p.telefono}</strong></div>
+              <div><span class="text-slate-400">Email:</span> <strong class="text-slate-700">${p.email || 'No registra'}</strong></div>
+            </div>
+          </div>
+
+          <!-- Laboratorio y Resultados (Athenea) -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Athenea · Laboratorio Clínico</span>
+            <div class="mt-2 space-y-2">
+        `;
+
+        if (d.athenea.resultados_laboratorio.length === 0) {
+          html += `<p class="text-xs text-slate-400">Sin órdenes de laboratorio recientes.</p>`;
+        } else {
+          d.athenea.resultados_laboratorio.forEach(r => {
+            const stColor = r.estado === 'LISTO' ? 'bg-emerald-100 text-emerald-800' :
+                            r.estado === 'EN_PROCESO' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+            html += `
+              <div class="text-xs p-2 bg-slate-50 rounded-lg border border-slate-200">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-semibold text-slate-800">${r.id_orden} (${r.fecha_toma})</span>
+                  <span class="font-bold text-[10px] px-2 py-0.5 rounded ${stColor}">${r.estado}</span>
+                </div>
+                <p class="text-slate-600">${r.examenes.join(', ')}</p>
+                <span class="text-[10px] text-slate-400">Entrega: ${r.canal_entrega} (${r.sede_toma})</span>
+              </div>
+            `;
+          });
+        }
+
+        html += `
+            </div>
+          </div>
+
+          <!-- Citas e Historia Clínica (iMedical) -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">iMedical · Citas y Resumen Clínico</span>
+            <div class="mt-2 space-y-2 text-xs">
+        `;
+
+        const citasFut = d.imedical.citas.filter(c => c.estado === 'ASIGNADA' || c.estado === 'CONFIRMADA');
+        if (citasFut.length === 0) {
+          html += `<p class="text-slate-400">No tiene citas pendientes programadas.</p>`;
+        } else {
+          citasFut.forEach(c => {
+            html += `
+              <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div class="flex justify-between items-center font-semibold text-emerald-950">
+                  <span>${c.especialidad}</span>
+                  <span class="text-[10px] bg-emerald-200 text-emerald-900 font-bold px-1.5 py-0.5 rounded">${c.estado}</span>
+                </div>
+                <div class="text-emerald-800 text-[11px] mt-0.5">${c.fecha_hora} · ${c.profesional}</div>
+                <div class="text-[10px] text-emerald-700">${c.sede}</div>
+                <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-emerald-200/60 text-[10px]">
+                  <span class="text-emerald-900 font-mono">Cupo: ${c.id_slot || 'N/D'}</span>
+                  <button onclick="cancelarCitaDesdeFicha('${c.id_slot || ''}', '${c.id_cita || ''}', '${p.numero_documento}')"
+                          class="bg-rose-100 hover:bg-rose-200 text-rose-800 font-semibold px-2 py-0.5 rounded transition">
+                    Cancelar / Liberar
+                  </button>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        const hist = d.imedical.historia_clinica || {};
+        html += `
+              <div class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-600">
+                <div><strong>Alergias:</strong> ${hist.alergias || 'Ninguna'} · <strong>Grupo:</strong> ${hist.grupo_sanguineo || 'N/D'}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interacciones y PQRS (SAGICC) -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded">SAGICC · Contact Center & PQRS</span>
+            <div class="mt-2 space-y-1.5 text-xs">
+        `;
+
+        if (d.sagicc.pqrs.length > 0) {
+          d.sagicc.pqrs.forEach(pq => {
+            html += `
+              <div class="p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <div class="font-semibold text-amber-950 flex justify-between">
+                  <span>${pq.radicado} (${pq.tipo})</span>
+                  <span>${pq.estado}</span>
+                </div>
+                <div class="text-amber-900 text-[11px]">${pq.motivo}</div>
+                <div class="text-[10px] text-amber-700">Límite respuesta: ${pq.fecha_limite_respuesta}</div>
+              </div>
+            `;
+          });
+        } else {
+          html += `<p class="text-slate-400">Sin PQRS radicadas.</p>`;
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+
+        c.innerHTML = html;
+
+      } catch (e) {
+        c.innerHTML = `
+          <div class="bg-red-50 text-red-700 p-4 rounded-xl text-xs">
+            ${e.message}
+          </div>
+        `;
+      }
+    }
+
+    // Validar Paciente en Agendamiento Web
+    async function validarPacienteWeb() {
+      const doc = document.getElementById('web-doc').value.trim();
+      const info = document.getElementById('web-paciente-info');
+      if (!doc) return;
+
+      info.classList.remove('hidden');
+      info.innerHTML = '<span class="text-slate-500">Validando en Athenea...</span>';
+
+      try {
+        const resp = await fetch(`/mock/athenea/api/v1/pacientes/${doc}`, {
+          headers: { 'x-api-key': 'athenea-dev-key' }
+        });
+        if (!resp.ok) throw new Error('Paciente no registrado en Athenea.');
+        const res = await resp.json();
+        const p = res.data;
+        info.innerHTML = `
+          <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-950">
+            <strong>${p.nombre_completo}</strong> · EPS: ${p.afiliacion.eps || 'Particular'} (${p.afiliacion.estado})
+          </div>
+        `;
+      } catch (e) {
+        info.innerHTML = `
+          <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-900">
+            ${e.message} Puede continuar agendándose como atención particular.
+          </div>
+        `;
+      }
+    }
+
+    // Buscar Cupos Disponibles Web
+    async function buscarCuposWeb() {
+      const esp = document.getElementById('web-esp').value;
+      const sede = document.getElementById('web-sede').value;
+      const c = document.getElementById('web-slots-container');
+      const btn = document.getElementById('btn-agendar-web');
+
+      if (!esp) {
+        c.innerHTML = '<div class="col-span-full py-6 text-center text-xs text-slate-400">Selecciona una especialidad.</div>';
+        btn.disabled = true;
+        return;
+      }
+
+      c.innerHTML = '<div class="col-span-full py-6 text-center text-xs text-slate-500">Buscando cupos en iMedical...</div>';
+
+      try {
+        let url = `/api/self-service/availability?especialidad=${encodeURIComponent(esp)}`;
+        if (sede) url += `&sede=${encodeURIComponent(sede)}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        const cupos = data.resultado || [];
+
+        if (cupos.length === 0) {
+          c.innerHTML = '<div class="col-span-full py-6 text-center text-xs text-rose-500">No hay cupos disponibles próximos.</div>';
+          btn.disabled = true;
+          return;
+        }
+
+        let html = '';
+        cupos.forEach(s => {
+          html += `
+            <label class="border border-slate-300 hover:border-emerald-500 rounded-xl p-2.5 cursor-pointer bg-white flex flex-col text-xs transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+              <input type="radio" name="slot_id" value="${s.id_slot}" onchange="seleccionarSlot('${s.id_slot}')" class="hidden" />
+              <strong class="text-slate-900">${s.fecha} - ${s.hora}</strong>
+              <span class="text-slate-600 text-[11px] truncate">${s.profesional}</span>
+              <span class="text-[10px] text-slate-400 truncate">${s.sede}</span>
+            </label>
+          `;
+        });
+        c.innerHTML = html;
+
+      } catch (e) {
+        c.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-red-500">${e.message}</div>`;
+      }
+    }
+
+    function seleccionarSlot(id) {
+      slotSeleccionado = id;
+      document.getElementById('btn-agendar-web').disabled = false;
+    }
+
+    // Realizar Reserva Web
+    async function realizarReservaWeb(e) {
+      e.preventDefault();
+      const doc = document.getElementById('web-doc').value.trim();
+      const particular = document.getElementById('web-particular').checked;
+      const resDiv = document.getElementById('web-reserva-resultado');
+
+      if (!slotSeleccionado || !doc) return;
+
+      resDiv.classList.remove('hidden');
+      resDiv.innerHTML = '<div class="text-xs text-slate-500">Procesando agendamiento en iMedical...</div>';
+
+      try {
+        const resp = await fetch('/api/self-service/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            numero_documento: doc,
+            id_slot: slotSeleccionado,
+            atencion_particular: particular
+          })
+        });
+        const d = await resp.json();
+        if (!resp.ok) throw new Error(d.detail || 'Error al agendar');
+
+        resDiv.innerHTML = `
+          <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-950 text-xs">
+            <h4 class="font-bold text-sm text-emerald-900 mb-1">¡Cita Asignada con Éxito!</h4>
+            <p><strong>Cita Radicado:</strong> ${d.resultado.id_cita}</p>
+            <p><strong>Fecha y Hora:</strong> ${d.resultado.fecha_hora}</p>
+            <p><strong>Especialidad:</strong> ${d.resultado.especialidad} (${d.resultado.profesional})</p>
+            <p><strong>Sede:</strong> ${d.resultado.sede}</p>
+            <p class="mt-2 text-emerald-800">Se ha enviado la confirmación al paciente. Esta cita ya descuenta disponibilidad de la agenda de la IPS.</p>
+          </div>
+        `;
+        buscarCuposWeb();
+      } catch (err) {
+        resDiv.innerHTML = `
+          <div class="p-4 bg-rose-50 border border-rose-300 rounded-xl text-rose-950 text-xs">
+            <strong>No fue posible agendar:</strong> ${err.message}
+          </div>
+        `;
+      }
+    }
+
+    // Cargar Métricas KPI de SAGICC
+    async function cargarMetricasKPI() {
+      try {
+        const resp = await fetch('/api/metrics/kpis');
+        const data = await resp.json();
+        const glob = data.global || {};
+
+        document.getElementById('kpi-aht').textContent = `${glob.aht_promedio_min || 7.5} min`;
+        document.getElementById('kpi-swivel').textContent = `${glob.pct_aht_en_consulta_sistemas || 44}%`;
+        document.getElementById('kpi-espera').textContent = `${glob.espera_promedio_min || 12} min`;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function cancelarCitaDesdeFicha(slotId, citaId, doc) {
+      const idRef = citaId || slotId || doc;
+      if (!confirm(`¿Estás seguro de cancelar la cita ${idRef} y liberar el cupo en iMedical?`)) return;
+      try {
+        const resp = await fetch('/api/self-service/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_slot: slotId || null,
+            id_cita: citaId || null,
+            numero_documento: doc || null,
+            motivo: 'Cancelada por el colaborador desde la Ficha 360'
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || data.detalle || 'Error al cancelar la cita');
+        alert(`✅ ${data.mensaje || 'Cupo liberado exitosamente y cita cancelada'}`);
+        cargarFicha360(doc);
+      } catch (err) {
+        alert(`❌ Error al liberar cupo: ${err.message}`);
+      }
+    }
+
+    function escapeHtml(text) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+  </script>
+</body>
+</html>

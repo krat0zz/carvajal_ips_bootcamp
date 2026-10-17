@@ -1,0 +1,62 @@
+# =========================================================================
+# SEGURIDAD Y CREDENCIALES (CRÍTICO: NUNCA SUBIR A GIT / VERCEL)
+# =========================================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# =========================================================================
+# ENTORNO VIRTUAL Y PYTHON
+# =========================================================================
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# =========================================================================
+# PRUEBAS Y COBERTURA (PYTEST)
+# =========================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# =========================================================================
+# VERCEL Y DESPLIEGUE
+# =========================================================================
+.vercel/
+
+# =========================================================================
+# ARCHIVOS DEL SISTEMA OPERATIVO Y EDITORES
+# =========================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
